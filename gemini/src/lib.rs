@@ -22,7 +22,6 @@ impl PlonkishComponents for GeminiScheme {
     type ProvingBackend = HyperPlonk<Self::Pcs>;
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 pub fn prove(
     srs_key_path: &str,
     proving_key_path: &str,
@@ -31,16 +30,6 @@ pub fn prove(
     _prove::<GeminiScheme>(srs_key_path, proving_key_path, input)
 }
 
-#[cfg(target_arch = "wasm32")]
-pub fn prove(
-    srs_key: &[u8],
-    proving_key: &[u8],
-    input: HashMap<String, Vec<String>>,
-) -> Result<GenerateProofResult, Box<dyn Error>> {
-    _prove::<GeminiScheme>(srs_key, proving_key, input)
-}
-
-#[cfg(not(target_arch = "wasm32"))]
 pub fn verify(
     srs_key_path: &str,
     verifying_key_path: &str,
@@ -50,15 +39,6 @@ pub fn verify(
     _verify::<GeminiScheme>(srs_key_path, verifying_key_path, proof, public_inputs)
 }
 
-#[cfg(target_arch = "wasm32")]
-pub fn verify(
-    srs_key: &[u8],
-    verifying_key: &[u8],
-    proof: Vec<u8>,
-    public_inputs: Vec<u8>,
-) -> Result<bool, Box<dyn Error>> {
-    _verify::<GeminiScheme>(srs_key, verifying_key, proof, public_inputs)
-}
 
 #[cfg(test)]
 mod tests {

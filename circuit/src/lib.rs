@@ -113,7 +113,6 @@ where
     Ok((proof, serialized_inputs))
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 pub fn prove<PC>(
     srs_key_path: &str,
     proving_key_path: &str,
@@ -130,21 +129,6 @@ where
     prove_with_params::<PC>(srs, proving_key, input)
 }
 
-#[cfg(target_arch = "wasm32")]
-pub fn prove<PC>(
-    srs_key: &[u8],
-    proving_key: &[u8],
-    input: HashMap<String, Vec<String>>,
-) -> Result<GenerateProofResult, Box<dyn Error>>
-where
-    PC: PlonkishComponents,
-    ProofTranscript: TranscriptWrite<CommitmentChunk<Fr, PC::Pcs>, Fr>,
-{
-    let srs = io::read_srs_bytes::<PC>(srs_key);
-    let proving_key = io::load_from_bytes::<PC::ProverParam>(proving_key).unwrap();
-
-    prove_with_params::<PC>(srs, proving_key, input)
-}
 
 fn verify_with_params<PC>(
     srs: PC::Param,
@@ -167,7 +151,6 @@ where
     Ok(is_valid)
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 pub fn verify<PC>(
     srs_key_path: &str,
     verifying_key_path: &str,
@@ -185,22 +168,6 @@ where
     verify_with_params::<PC>(srs, verifying_key, proof, public_inputs)
 }
 
-#[cfg(target_arch = "wasm32")]
-pub fn verify<PC>(
-    srs_key: &[u8],
-    verifying_key: &[u8],
-    proof: Vec<u8>,
-    public_inputs: Vec<u8>,
-) -> Result<bool, Box<dyn Error>>
-where
-    PC: PlonkishComponents,
-    ProofTranscript: TranscriptRead<CommitmentChunk<Fr, PC::Pcs>, Fr>,
-{
-    let srs = io::read_srs_bytes::<PC>(srs_key);
-    let verifying_key = io::load_from_bytes::<PC::VerifierParam>(verifying_key).unwrap();
-
-    verify_with_params::<PC>(srs, verifying_key, proof, public_inputs)
-}
 
 pub fn setup_keys(genkey_cmd: &str, srs_filename: &str) {
     let once = Once::new();
@@ -222,7 +189,6 @@ pub fn setup_keys(genkey_cmd: &str, srs_filename: &str) {
 }
 
 // For external integration tests
-#[cfg(not(target_arch = "wasm32"))]
 pub fn test_prove_verify_end_to_end<PC>(
     genkey_cmd: &str,
     srs_key_path: &str,

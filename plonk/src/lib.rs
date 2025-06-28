@@ -1,7 +1,4 @@
-#[cfg(not(target_arch = "wasm32"))]
 use std::fs::File;
-#[cfg(target_arch = "wasm32")]
-use std::io::BufReader;
 use std::{collections::HashMap, error::Error};
 
 use fibonacci_circuit::{serialisation::*, FibonacciCircuit, FibonacciError, GenerateProofResult};
@@ -109,7 +106,6 @@ fn prove_with_params(
     Ok((proof, serialized_inputs))
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 pub fn prove(
     srs_key_path: &str,
     proving_key_path: &str,
@@ -127,22 +123,6 @@ pub fn prove(
     prove_with_params(params, proving_key, input)
 }
 
-#[cfg(target_arch = "wasm32")]
-pub fn prove(
-    srs_key: &[u8],
-    proving_key: &[u8],
-    input: HashMap<String, Vec<String>>,
-) -> Result<GenerateProofResult, Box<dyn Error>> {
-    let mut params_reader = BufReader::new(srs_key);
-    let params =
-        ParamsKZG::<Bn256>::read(&mut params_reader).expect("Failed to read params from bytes");
-
-    let mut pk_reader = BufReader::new(proving_key);
-    let proving_key =
-        ProvingKey::read::<_, FibonacciCircuit<Fr>, false>(&mut pk_reader, RawBytes).unwrap();
-
-    prove_with_params(params, proving_key, input)
-}
 
 fn verify_with_params(
     params: ParamsKZG<Bn256>,
@@ -161,7 +141,6 @@ fn verify_with_params(
     Ok(result)
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 pub fn verify(
     srs_key_path: &str,
     verifying_key_path: &str,
@@ -176,23 +155,6 @@ pub fn verify(
     let mut vk_fs = File::open(verifying_key_path).expect("Couldn't load verifying key");
     let verifying_key =
         VerifyingKey::read::<_, FibonacciCircuit<Fr>, false>(&mut vk_fs, RawBytes).unwrap();
-
-    verify_with_params(params, verifying_key, proof, public_inputs)
-}
-
-#[cfg(target_arch = "wasm32")]
-pub fn verify(
-    srs_key: &[u8],
-    verifying_key: &[u8],
-    proof: Vec<u8>,
-    public_inputs: Vec<u8>,
-) -> Result<bool, Box<dyn Error>> {
-    let mut params_reader = BufReader::new(srs_key);
-    let params = ParamsKZG::<Bn256>::read(&mut params_reader).expect("Failed to read params");
-
-    let mut vk_reader = BufReader::new(verifying_key);
-    let verifying_key =
-        VerifyingKey::read::<_, FibonacciCircuit<Fr>, false>(&mut vk_reader, RawBytes).unwrap();
 
     verify_with_params(params, verifying_key, proof, public_inputs)
 }
